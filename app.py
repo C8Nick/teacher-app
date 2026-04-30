@@ -4,7 +4,7 @@ import datetime
 import pandas as pd
 
 # ❗❗❗ 你的 Google Apps Script 網址 ❗❗❗
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwpbxSjmOrA0TAcCzkjcCYMeFCc0ES0VpKyBoQnYzLXhVDGI7_JBjLP2YeiR9LYx_nO/exec"
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZUNzKxJO-saVs7hjoAXTGoRkxV2j8lgmDwse9umZk1OhUBMfO88kASDfz-H57H9Y3/exec"
 
 # ================= 頁面設定 =================
 st.set_page_config(page_title="教師服務系統", page_icon="👩‍🏫", layout="centered")
