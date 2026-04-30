@@ -35,7 +35,7 @@ if not st.session_state.logged_in:
     st.markdown("<p style='text-align: center;'>歡迎回來，請登入您的帳號</p>", unsafe_allow_html=True)
     
     with st.container():
-        acc = st.text_input("帳號 (手機或 Email)")
+        acc = st.text_input("帳號 (手機)")
         pwd = st.text_input("密碼", type="password")
         
         if st.button("登入", use_container_width=True, type="primary"):
@@ -226,7 +226,7 @@ else:
             birthday = st.text_input("生日 (YYYY/MM/DD)", value=clean(p_data[4]))
             email = st.text_input("電子郵件", value=clean(p_data[5]))
             line_id = st.text_input("LINE ID", value=clean(p_data[6]))
-            phone = st.text_input("聯繫電話", value=clean(p_data[7]))
+            phone = st.text_input("緊急聯絡人", value=clean(p_data[7]))
             hometown = st.text_input("戶籍地址", value=clean(p_data[8]))
             address = st.text_input("居住地址", value=clean(p_data[9]))
             
