@@ -57,8 +57,15 @@ else:
         st.session_state.profile_data = []
         st.rerun()
 
-    # 取出老師名稱 (如果個人資料有填的話)
-    teacher_name = st.session_state.profile_data[1] if len(st.session_state.profile_data) > 1 and st.session_state.profile_data[1] else st.session_state.current_user
+    # 🌟 取出老師名稱 (優先使用「綽號」，沒有綽號才用「姓名」，都沒填就用「帳號」)
+    p_data = st.session_state.profile_data
+    if len(p_data) > 3 and str(p_data[3]).strip():
+        teacher_name = str(p_data[3]).strip()
+    elif len(p_data) > 1 and str(p_data[1]).strip():
+        teacher_name = str(p_data[1]).strip()
+    else:
+        teacher_name = st.session_state.current_user
+        
     st.sidebar.success(f"歡迎, {teacher_name}")
 
     # 使用 Tab 來做手機版友好的導覽列
