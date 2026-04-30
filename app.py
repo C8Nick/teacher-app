@@ -26,7 +26,7 @@ if "profile_data" not in st.session_state:
 if not st.session_state.logged_in:
     
     # 利用三個欄位將 LOGO 置中 (比例 1:2:1 可以根據你的 LOGO 大小微調)
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([0.5, 1, 0.5])
     with col2:
         st.image("LOGO.png", use_container_width=True)
         
