@@ -69,7 +69,7 @@ else:
         
     with col2:
         # 在右邊放入系統標題 (去掉了原本的 emoji)
-        st.title("教師服務系統")
+        st.title("奇幻島教師服務系統")
 
     # === 下方的登出按鈕維持你原本的程式碼不變 ===
     if st.sidebar.button("登出", type="secondary"):
