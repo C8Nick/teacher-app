@@ -2,12 +2,17 @@ import streamlit as st
 import requests
 import datetime
 import pandas as pd
+from PIL import Image
 
 # ❗❗❗ 你的 Google Apps Script 網址 ❗❗❗
 WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZUNzKxJO-saVs7hjoAXTGoRkxV2j8lgmDwse9umZk1OhUBMfO88kASDfz-H57H9Y3/exec"
 
 # ================= 頁面設定 =================
-st.set_page_config(page_title="教師服務系統", page_icon="👩‍🏫", layout="centered")
+# 讀取你的 LOGO 圖片
+img_icon = Image.open("LOGO.png")
+
+# 將 page_icon 換成你的 LOGO 圖片變數
+st.set_page_config(page_title="奇幻島教師服務系統", page_icon=img_icon, layout="centered")
 
 # 初始化 Session State (用來記住登入狀態與資料)
 if "logged_in" not in st.session_state:
@@ -113,7 +118,7 @@ else:
             
         st.write("請填寫欲借用的物品（可點擊表格下方新增列）：")
         edited_df = st.data_editor(st.session_state.borrow_df, num_rows="dynamic", use_container_width=True)
-        notes = st.text_area("備註跟借用工具稽核人")
+        notes = st.text_area("備註跟檢查的人")
         
         if st.button("送出借用申請", type="primary", use_container_width=True):
             # 過濾掉沒有填寫物品名稱的空白列
