@@ -107,7 +107,7 @@ else:
             
             branch = st.text_input("班部名稱")
             hours = st.number_input("上課時數 (小時)", min_value=0.0, value=2.0, step=0.5)
-            content = st.text_area("課程進度與備註")
+            content = st.text_area("課程內容與特殊狀況")
             
             if st.form_submit_button("送出回報", type="primary", use_container_width=True):
                 if not branch:
