@@ -97,7 +97,7 @@ else:
                     try:
                         requests.post(WEB_APP_URL, json={"sheet_name": "回報", "row": row_data})
                         st.success("課程回報已送出！")
-                    except:
+                    except Exception as e:
                         st.error("連線失敗")
 
     # === 第二頁：借還 ===
@@ -127,7 +127,7 @@ else:
                     st.success("借用申請已送出！")
                     st.session_state.borrow_df = pd.DataFrame([{"物品名稱": "", "數量": 1}]) # 清空表格
                     st.rerun()
-                except:
+                except Exception as e:
                     st.error("連線失敗")
 
     # === 第三頁：結算 ===
@@ -147,7 +147,7 @@ else:
                         st.session_state.settle_data = data
                     else:
                         st.error("無法獲取資料")
-                except:
+                except Exception as e:
                     st.error("連線失敗")
                     
         # 如果有查詢到資料，顯示表格與提交按鈕
@@ -175,7 +175,7 @@ else:
                             "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_str]
                         })
                         st.success("結算申請已提交！")
-                    except:
+                    except Exception as e:
                         st.error("連線失敗")
             else:
                 st.info("這個月沒有您的回報紀錄喔！")
@@ -211,5 +211,5 @@ else:
                     st.session_state.profile_data = row_data # 更新本機暫存
                     st.success("個人資料已儲存！")
                     st.rerun() # 重新整理以更新側邊欄名稱
-                except:
+                except Exception as e:
                     st.error("連線失敗")
