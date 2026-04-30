@@ -24,7 +24,14 @@ if "profile_data" not in st.session_state:
 
 # ================= 登入頁面 =================
 if not st.session_state.logged_in:
-    st.markdown("<h2 style='text-align: center;'>👩‍🏫 教師服務系統</h2>", unsafe_allow_html=True)
+    
+    # 利用三個欄位將 LOGO 置中 (比例 1:2:1 可以根據你的 LOGO 大小微調)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.image("LOGO.png", use_container_width=True)
+        
+    # 這裡我把原本的 👩‍🏫 拿掉了，因為上面已經有可愛的太空人 LOGO 囉！
+    st.markdown("<h2 style='text-align: center;'>教師服務系統</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>歡迎回來，請登入您的帳號</p>", unsafe_allow_html=True)
     
     with st.container():
