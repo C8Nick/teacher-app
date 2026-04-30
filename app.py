@@ -60,9 +60,18 @@ if not st.session_state.logged_in:
 
 # ================= 主系統頁面 =================
 else:
-    st.title("👩‍🏫 教師服務系統")
+    # 將畫面切成左右兩塊 (比例 1:5，讓 LOGO 小一點、標題空間大一點)
+    col1, col2 = st.columns([1, 5])
     
-    # 登出按鈕
+    with col1:
+        # 在左邊放入 LOGO
+        st.image("LOGO.png", use_container_width=True)
+        
+    with col2:
+        # 在右邊放入系統標題 (去掉了原本的 emoji)
+        st.title("教師服務系統")
+
+    # === 下方的登出按鈕維持你原本的程式碼不變 ===
     if st.sidebar.button("登出", type="secondary"):
         st.session_state.logged_in = False
         st.session_state.current_user = ""
