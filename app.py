@@ -73,7 +73,7 @@ else:
 
     # === 第一頁：回報 ===
     with tab1:
-        st.link_button("📅 課程行事曆訂閱", "https://docs.google.com/spreadsheets/d/1fJvp0Q2GPrXygX69M5AAy8QjiKGAJge01H-4kMo84xM/edit?usp=sharing", use_container_width=True)
+        st.link_button("📅 課程行事曆訂閱", "", use_container_width=True)
         st.subheader("填寫課後回報")
         
         with st.form("report_form"):
