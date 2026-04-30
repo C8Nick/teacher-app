@@ -31,7 +31,7 @@ if not st.session_state.logged_in:
         st.image("LOGO.png", use_container_width=True)
         
     # 這裡我把原本的 👩‍🏫 拿掉了，因為上面已經有可愛的太空人 LOGO 囉！
-    st.markdown("<h2 style='text-align: center;'>教師服務系統</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>奇幻島教師服務系統</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>歡迎回來，請登入您的帳號</p>", unsafe_allow_html=True)
     
     with st.container():
