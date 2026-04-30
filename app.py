@@ -113,7 +113,7 @@ else:
             
         st.write("請填寫欲借用的物品（可點擊表格下方新增列）：")
         edited_df = st.data_editor(st.session_state.borrow_df, num_rows="dynamic", use_container_width=True)
-        notes = st.text_area("備註")
+        notes = st.text_area("備註跟檢查的人")
         
         if st.button("送出借用申請", type="primary", use_container_width=True):
             # 過濾掉沒有填寫物品名稱的空白列
