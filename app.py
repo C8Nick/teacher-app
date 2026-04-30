@@ -92,7 +92,10 @@ else:
                 if not branch:
                     st.warning("請填寫班部名稱！")
                 else:
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    # 🌟 強制轉換為台灣時間 (UTC+8)
+                    taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+                    timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
+                    
                     row_data = [timestamp, date.strftime("%Y/%m/%d"), teacher_name, start_t.strftime("%H:%M"), end_t.strftime("%H:%M"), branch, hours, content, job]
                     try:
                         requests.post(WEB_APP_URL, json={"sheet_name": "回報", "row": row_data})
@@ -120,7 +123,11 @@ else:
             else:
                 names = "\n".join(valid_items["物品名稱"].astype(str).tolist())
                 qtys = "\n".join(valid_items["數量"].astype(str).tolist())
-                timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                # 🌟 強制轉換為台灣時間 (UTC+8)
+                taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+                timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
+                
                 row_data = [timestamp, teacher_name, names, qtys, notes]
                 try:
                     requests.post(WEB_APP_URL, json={"sheet_name": "借還", "row": row_data})
@@ -162,7 +169,9 @@ else:
                 st.markdown(f"#### {total_str}")
                 
                 if st.button("提交結算申請", type="primary", use_container_width=True):
-                    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    # 🌟 強制轉換為台灣時間 (UTC+8)
+                    taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+                    timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
                     
                     # 從個人資料中抓取銀行帳號
                     p_data = st.session_state.profile_data
