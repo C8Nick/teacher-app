@@ -158,7 +158,7 @@ else:
                 except Exception as e:
                     st.error("連線失敗")
 
-    # === 第三頁：結算 ===
+   # === 第三頁：結算 ===
     with tab3:
         st.subheader("薪資結算申請")
         
@@ -183,14 +183,25 @@ else:
             data = st.session_state.settle_data
             if data:
                 df = pd.DataFrame(data)
-                df.columns = ["班部名稱", "總時數"]
+                
+                # 🌟 將 API 回傳的 key 重新命名為中文欄位
+                df = df.rename(columns={
+                    "branch": "班部名稱", 
+                    "teacher_hours": "老師總時數", 
+                    "ta_hours": "助教總時數"
+                })
                 st.dataframe(df, use_container_width=True, hide_index=True)
-                total_hours = sum([float(item["hours"]) for item in data])
-                total_str = f"總計時數：{total_hours} 小時"
+                
+                # 🌟 分別計算兩種時數的總和
+                total_teacher_hours = sum([float(item["teacher_hours"]) for item in data])
+                total_ta_hours = sum([float(item["ta_hours"]) for item in data])
+                
+                # 組合顯示字串
+                total_str = f"老師總計：{total_teacher_hours} 小時 ｜ 助教總計：{total_ta_hours} 小時"
                 st.markdown(f"#### {total_str}")
                 
                 if st.button("提交結算申請", type="primary", use_container_width=True):
-                    # 🌟 強制轉換為台灣時間 (UTC+8)
+                    # 強制轉換為台灣時間 (UTC+8)
                     taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
                     timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
                     
@@ -202,6 +213,7 @@ else:
                     try:
                         requests.post(WEB_APP_URL, json={
                             "sheet_name": "結算", 
+                            # 將結算字串寫入試算表，方便會計辨識
                             "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_str]
                         })
                         st.success("結算申請已提交！")
@@ -209,7 +221,6 @@ else:
                         st.error("連線失敗")
             else:
                 st.info("這個月沒有您的回報紀錄喔！")
-
     # === 第四頁：個人 ===
     with tab4:
         st.subheader("基本資訊")
