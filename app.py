@@ -5,7 +5,7 @@ import pandas as pd
 from PIL import Image
 
 # ❗❗❗ 你的 Google Apps Script 網址 ❗❗❗
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwZUNzKxJO-saVs7hjoAXTGoRkxV2j8lgmDwse9umZk1OhUBMfO88kASDfz-H57H9Y3/exec"
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyR1yso10uCean3ZpwjFkzWaLfLU51b9hJj5PCcSQzS8flZPcp4o8DIuo1PHQIFWLpq/exec"
 
 # ================= 頁面設定 =================
 # 讀取你的 LOGO 圖片
