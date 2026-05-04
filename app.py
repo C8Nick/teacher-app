@@ -158,7 +158,7 @@ else:
                 except Exception as e:
                     st.error("連線失敗")
 
-   # === 第三頁：結算 ===
+  # === 第三頁：結算 ===
     with tab3:
         st.subheader("薪資結算申請")
         
@@ -184,7 +184,7 @@ else:
             if data:
                 df = pd.DataFrame(data)
                 
-                # 🌟 將 API 回傳的 key 重新命名為中文欄位
+                # 將 API 回傳的 key 重新命名為中文欄位
                 df = df.rename(columns={
                     "branch": "班部名稱", 
                     "teacher_hours": "老師總時數", 
@@ -192,11 +192,11 @@ else:
                 })
                 st.dataframe(df, use_container_width=True, hide_index=True)
                 
-                # 🌟 分別計算兩種時數的總和
+                # 分別計算兩種時數的總和
                 total_teacher_hours = sum([float(item["teacher_hours"]) for item in data])
                 total_ta_hours = sum([float(item["ta_hours"]) for item in data])
                 
-                # 組合顯示字串
+                # 組合顯示字串 (顯示在畫面上給老師看)
                 total_str = f"老師總計：{total_teacher_hours} 小時 ｜ 助教總計：{total_ta_hours} 小時"
                 st.markdown(f"#### {total_str}")
                 
@@ -213,8 +213,9 @@ else:
                     try:
                         requests.post(WEB_APP_URL, json={
                             "sheet_name": "結算", 
-                            # 將結算字串寫入試算表，方便會計辨識
-                            "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_str]
+                            # 🌟 這裡修改了！把原本的一整串 total_str 拆成兩個獨立的數字
+                            # 這樣就會依照順序寫入 F欄 (老師時數) 和 G欄 (助教時數)
+                            "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_teacher_hours, total_ta_hours]
                         })
                         st.success("結算申請已提交！")
                     except Exception as e:
