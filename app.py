@@ -119,62 +119,82 @@ else:
                     except Exception as e:
                         st.error("連線失敗")
 
-    # === 第二頁：請款 (全新修改) ===
+  # === 第二頁：請款 (全新修改為動態表格) ===
     with tab2:
         st.subheader("🧾 申請請款")
         
-        # clear_on_submit=True 可以在送出成功後自動清空欄位與照片
-        with st.form("claim_form", clear_on_submit=True):
-            item_name = st.text_input("物品 / 請款項目名稱", placeholder="例如：文具費、影印費...")
-            price = st.number_input("申請金額 (元)", min_value=0, step=1)
+        # 初始化請款表格的 Session State
+        if "claim_df" not in st.session_state:
+            st.session_state.claim_df = pd.DataFrame([{"物品 / 請款項目名稱": "", "金額 (元)": 0}])
             
-            st.markdown("##### 📸 上傳收據或發票")
-            st.info("💡 手機操作時，點擊下方按鈕可直接選擇「拍照」或「相簿」。")
-            receipt_file = st.file_uploader("請上傳照片", type=["jpg", "jpeg", "png"])
+        st.write("請填寫請款項目（可點擊表格下方 ➕ 新增列）：")
+        
+        # 使用 data_editor 產生可編輯與新增的動態表格
+        edited_claim_df = st.data_editor(
+            st.session_state.claim_df, 
+            num_rows="dynamic", 
+            use_container_width=True,
+            column_config={
+                "金額 (元)": st.column_config.NumberColumn("金額 (元)", min_value=0, step=1)
+            }
+        )
+        
+        st.markdown("##### 📸 上傳收據或發票")
+        st.info("💡 手機操作時，點擊下方按鈕可直接選擇「拍照」或「相簿」。")
+        # 加上 key 確保送出後可以用 rerun 清空狀態
+        receipt_file = st.file_uploader("請上傳照片", type=["jpg", "jpeg", "png"], key="claim_file")
+        
+        notes = st.text_area("備註說明 (選填)", key="claim_notes")
+        
+        if st.button("送出請款申請", type="primary", use_container_width=True):
+            # 過濾掉沒有填寫物品名稱的空白列
+            valid_claims = edited_claim_df[edited_claim_df["物品 / 請款項目名稱"].str.strip() != ""]
             
-            notes = st.text_area("備註說明 (選填)")
-            
-            submit_claim = st.form_submit_button("送出請款申請", type="primary", use_container_width=True)
-            
-            if submit_claim:
-                if not item_name:
-                    st.warning("請填寫物品名稱！")
-                elif price <= 0:
-                    st.warning("請填寫正確的金額！")
-                elif not receipt_file:
-                    st.warning("請務必上傳或拍攝收據/發票照片！")
-                else:
-                    with st.spinner("圖片處理與上傳中，請稍候..."):
-                        try:
-                            # 1. 壓縮圖片（避免圖片太大導致 API 超時或爆字數）
-                            img = Image.open(receipt_file)
-                            if img.mode != 'RGB':
-                                img = img.convert('RGB')
-                            
-                            # 限制最大長寬為 800px，畫質設定 75%
-                            img.thumbnail((800, 800))
-                            buffered = io.BytesIO()
-                            img.save(buffered, format="JPEG", quality=75)
-                            
-                            # 將圖片轉換成 Base64 文字
-                            base64_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                            
-                            # 2. 組合送出的資料
-                            taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
-                            timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
-                            
-                            # 注意：請在 Google Sheet 建立一個名為「請款」的工作表
-                            # 預計欄位為：時間、申請人、物品、金額、備註、收據圖片(Base64)
-                            row_data = [timestamp, teacher_name, item_name, price, notes, base64_img]
-                            
-                            res = requests.post(WEB_APP_URL, json={"sheet_name": "請款", "row": row_data})
-                            
-                            if res.status_code == 200:
-                                st.success("🎉 請款申請已成功送出！")
-                            else:
-                                st.error("伺服器錯誤，請稍後再試。")
-                        except Exception as e:
-                            st.error(f"處理失敗: {e}")
+            if valid_claims.empty:
+                st.warning("請至少填寫一項請款物品！")
+            elif valid_claims["金額 (元)"].sum() <= 0:
+                st.warning("請款總金額必須大於 0！")
+            elif not receipt_file:
+                st.warning("請務必上傳或拍攝收據/發票照片！")
+            else:
+                with st.spinner("圖片處理與上傳中，請稍候..."):
+                    try:
+                        # 計算總金額
+                        total_amount = int(valid_claims["金額 (元)"].sum())
+                        
+                        # 把品項跟價錢組合成字串，方便 Google Sheet 閱讀 (例如：文具 (100元) \n 影印 (50元))
+                        item_details = "\n".join(
+                            [f"{row['物品 / 請款項目名稱']} ({int(row['金額 (元)'])}元)" for _, row in valid_claims.iterrows()]
+                        )
+                        
+                        # 1. 壓縮圖片
+                        img = Image.open(receipt_file)
+                        if img.mode != 'RGB':
+                            img = img.convert('RGB')
+                        
+                        img.thumbnail((800, 800))
+                        buffered = io.BytesIO()
+                        img.save(buffered, format="JPEG", quality=75)
+                        base64_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                        
+                        # 2. 組合送出的資料
+                        taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
+                        timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
+                        
+                        # 寫入資料：時間, 老師名稱, 品項明細, 總金額, 備註, 圖片Base64
+                        row_data = [timestamp, teacher_name, item_details, total_amount, notes, base64_img]
+                        
+                        res = requests.post(WEB_APP_URL, json={"sheet_name": "請款", "row": row_data})
+                        
+                        if res.status_code == 200:
+                            st.success("🎉 請款申請已成功送出！")
+                            # 送出成功後清空暫存表格
+                            st.session_state.claim_df = pd.DataFrame([{"物品 / 請款項目名稱": "", "金額 (元)": 0}]) 
+                            st.rerun() # 重新整理頁面，清空上傳圖片和備註的狀態
+                        else:
+                            st.error("伺服器錯誤，請稍後再試。")
+                    except Exception as e:
+                        st.error(f"處理失敗: {e}")
 
     # === 第三頁：結算 ===
     with tab3:
