@@ -14,7 +14,7 @@ WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyR1yso10uCean3ZpwjFkzWaL
 img_icon = Image.open("LOGO.png")
 
 # 將 page_icon 換成你的 LOGO 圖片變數
-st.set_page_config(page_title="奇幻島教師請薪資報帳系統", page_icon=img_icon, layout="centered")
+st.set_page_config(page_title="奇幻島教師薪資報帳系統", page_icon=img_icon, layout="centered")
 
 # 初始化 Session State (用來記住登入狀態與資料)
 if "logged_in" not in st.session_state:
@@ -31,7 +31,7 @@ if not st.session_state.logged_in:
     with col2:
         st.image("LOGO.png", use_container_width=True)
         
-    st.markdown("<h2 style='text-align: center;'>奇幻島教師請薪資報帳系統</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>奇幻島教師薪資報帳系統</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>歡迎回來，請登入您的帳號</p>", unsafe_allow_html=True)
     
     with st.container():
@@ -41,18 +41,23 @@ if not st.session_state.logged_in:
         if st.button("登入", use_container_width=True, type="primary"):
             if not acc or not pwd:
                 st.warning("請輸入帳號與密碼！")
-            elif pwd != "123456":
-                st.error("密碼錯誤！")
             else:
                 with st.spinner("載入資料中，請稍候..."):
                     try:
-                        res = requests.get(WEB_APP_URL, params={"action": "get_profile", "account": acc})
+                        # 將密碼傳給後端進行驗證
+                        res = requests.get(WEB_APP_URL, params={"action": "get_profile", "account": acc, "password": pwd})
                         if res.status_code == 200:
-                            data = res.json()
-                            st.session_state.profile_data = data if data else [acc] + [""]*11
-                            st.session_state.current_user = acc
-                            st.session_state.logged_in = True
-                            st.rerun() # 重新整理頁面進入主系統
+                            result = res.json()
+                            
+                            if result.get("status") == "wrong_password":
+                                st.error("密碼錯誤！")
+                            elif result.get("status") in ["success", "new_user"]:
+                                # 取出資料，若為新用戶則補齊 13 格 (保留密碼欄位)
+                                data = result.get("data")
+                                st.session_state.profile_data = data if data else [acc] + [""]*12
+                                st.session_state.current_user = acc
+                                st.session_state.logged_in = True
+                                st.rerun() # 重新整理頁面進入主系統
                         else:
                             st.error("連線錯誤，請確認網址")
                     except Exception as e:
@@ -66,7 +71,7 @@ else:
         st.image("LOGO.png", use_container_width=True)
         
     with col2:
-        st.title("奇幻島教師請薪資報帳系統")
+        st.title("奇幻島教師薪資報帳系統")
 
     if st.sidebar.button("登出", type="secondary"):
         st.session_state.logged_in = False
@@ -85,7 +90,6 @@ else:
         
     st.sidebar.success(f"歡迎, {teacher_name}")
 
-    # 🌟 這裡修改了 Tab 的名稱：將「借還」改為「請款」
     tab1, tab2, tab3, tab4 = st.tabs(["✍️ 回報", "🧾 請款", "💰 結算", "👤 個人"])
 
     # === 第一頁：回報 ===
@@ -119,17 +123,15 @@ else:
                     except Exception as e:
                         st.error("連線失敗")
 
-  # === 第二頁：請款 (全新修改為動態表格) ===
+    # === 第二頁：請款 ===
     with tab2:
         st.subheader("🧾 申請請款")
         
-        # 初始化請款表格的 Session State
         if "claim_df" not in st.session_state:
             st.session_state.claim_df = pd.DataFrame([{"物品 / 請款項目名稱": "", "金額 (元)": 0}])
             
         st.write("請填寫請款項目（可點擊表格下方 ➕ 新增列）：")
         
-        # 使用 data_editor 產生可編輯與新增的動態表格
         edited_claim_df = st.data_editor(
             st.session_state.claim_df, 
             num_rows="dynamic", 
@@ -141,13 +143,11 @@ else:
         
         st.markdown("##### 📸 上傳收據或發票")
         st.info("💡 手機操作時，點擊下方按鈕可直接選擇「拍照」或「相簿」。")
-        # 加上 key 確保送出後可以用 rerun 清空狀態
         receipt_file = st.file_uploader("請上傳照片", type=["jpg", "jpeg", "png"], key="claim_file")
         
         notes = st.text_area("備註說明 (選填)", key="claim_notes")
         
         if st.button("送出請款申請", type="primary", use_container_width=True):
-            # 過濾掉沒有填寫物品名稱的空白列
             valid_claims = edited_claim_df[edited_claim_df["物品 / 請款項目名稱"].str.strip() != ""]
             
             if valid_claims.empty:
@@ -159,39 +159,27 @@ else:
             else:
                 with st.spinner("圖片處理與上傳中，請稍候..."):
                     try:
-                        # 計算總金額
                         total_amount = int(valid_claims["金額 (元)"].sum())
+                        item_details = "\n".join([str(row['物品 / 請款項目名稱']) for _, row in valid_claims.iterrows()])
                         
-                        # 把品項跟價錢組合成字串，方便 Google Sheet 閱讀 (例如：文具 (100元) \n 影印 (50元))
-                        # 修改後：只保留物品名稱
-                        item_details = "\n".join(
-                        [str(row['物品 / 請款項目名稱']) for _, row in valid_claims.iterrows()]
-                        )
-                        
-                        # 1. 壓縮圖片
                         img = Image.open(receipt_file)
-                        if img.mode != 'RGB':
-                            img = img.convert('RGB')
+                        if img.mode != 'RGB': img = img.convert('RGB')
                         
                         img.thumbnail((800, 800))
                         buffered = io.BytesIO()
                         img.save(buffered, format="JPEG", quality=75)
                         base64_img = base64.b64encode(buffered.getvalue()).decode("utf-8")
                         
-                        # 2. 組合送出的資料
                         taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
                         timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
                         
-                        # 寫入資料：時間, 老師名稱, 品項明細, 總金額, 備註, 圖片Base64
                         row_data = [timestamp, teacher_name, item_details, total_amount, notes, base64_img]
-                        
                         res = requests.post(WEB_APP_URL, json={"sheet_name": "請款", "row": row_data})
                         
                         if res.status_code == 200:
                             st.success("🎉 請款申請已成功送出！")
-                            # 送出成功後清空暫存表格
                             st.session_state.claim_df = pd.DataFrame([{"物品 / 請款項目名稱": "", "金額 (元)": 0}]) 
-                            st.rerun() # 重新整理頁面，清空上傳圖片和備註的狀態
+                            st.rerun() 
                         else:
                             st.error("伺服器錯誤，請稍後再試。")
                     except Exception as e:
@@ -258,7 +246,8 @@ else:
         st.subheader("基本資訊")
         p_data = st.session_state.profile_data
         
-        while len(p_data) < 12: p_data.append("")
+        # 補齊 13 格 (因為最後一格 index 12 要放密碼)
+        while len(p_data) < 13: p_data.append("")
         def clean(val): return str(val).replace("T16:00:00.000Z", "").replace("None", "") if val else ""
 
         with st.form("profile_form"):
@@ -276,12 +265,17 @@ else:
             bank_code = st.text_input("銀行代碼", value=clean(p_data[10]))
             bank_acc = st.text_input("銀行帳號", value=clean(p_data[11]))
             
+            st.markdown("##### 🔒 安全設定")
+            # 如果是空資料，先顯示預設密碼 123456
+            current_pwd = str(p_data[12]) if len(p_data) > 12 and str(p_data[12]) != "None" and str(p_data[12]).strip() != "" else "123456"
+            new_password = st.text_input("登入密碼", value=current_pwd, type="password", help="預設密碼為 123456，建議您立即修改。")
+            
             if st.form_submit_button("儲存資料", type="primary", use_container_width=True):
-                row_data = [st.session_state.current_user, name, id_num, nickname, birthday, email, line_id, phone, hometown, address, bank_code, bank_acc]
+                row_data = [st.session_state.current_user, name, id_num, nickname, birthday, email, line_id, phone, hometown, address, bank_code, bank_acc, new_password]
                 try:
                     requests.post(WEB_APP_URL, json={"sheet_name": "個人資訊", "row": row_data})
                     st.session_state.profile_data = row_data 
-                    st.success("個人資料已儲存！")
+                    st.success("個人資料已儲存！請妥善保管您的新密碼。")
                     st.rerun() 
                 except Exception as e:
                     st.error("連線失敗")
