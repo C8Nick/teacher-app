@@ -163,8 +163,9 @@ else:
                         total_amount = int(valid_claims["金額 (元)"].sum())
                         
                         # 把品項跟價錢組合成字串，方便 Google Sheet 閱讀 (例如：文具 (100元) \n 影印 (50元))
+                        # 修改後：只保留物品名稱
                         item_details = "\n".join(
-                            [f"{row['物品 / 請款項目名稱']} ({int(row['金額 (元)'])}元)" for _, row in valid_claims.iterrows()]
+                        [str(row['物品 / 請款項目名稱']) for _, row in valid_claims.iterrows()]
                         )
                         
                         # 1. 壓縮圖片
