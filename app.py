@@ -185,7 +185,7 @@ else:
                     except Exception as e:
                         st.error(f"處理失敗: {e}")
 
-  # === 第三頁：結算 ===
+ # === 第三頁：結算 ===
     with tab3:
         st.subheader("薪資結算申請")
         
@@ -193,37 +193,42 @@ else:
         months = [f"{current_year}/{i:02d}" for i in range(1, 13)]
         selected_month = st.selectbox("選擇結算月份", months, index=datetime.datetime.now().month - 1)
         
-        if st.button("🔍 查詢當月回報資料", use_container_width=True):
-            with st.spinner("查詢中..."):
+        if st.button("🔍 查詢當月結算資料", use_container_width=True):
+            with st.spinner("查詢與計算中..."):
                 try:
                     res = requests.get(WEB_APP_URL, params={"action": "get_summary", "teacher": teacher_name, "month": selected_month})
                     if res.status_code == 200:
                         data = res.json()
-                        st.session_state.settle_data = data
+                        # 從新的格式中取出時數表與報帳總額
+                        st.session_state.settle_data = data.get("hours_data", [])
+                        st.session_state.claim_amount = data.get("total_claim", 0)
                     else:
                         st.error("無法獲取資料")
                 except Exception as e:
                     st.error("連線失敗")
                     
-        if "settle_data" in st.session_state:
-            data = st.session_state.settle_data
-            if data:
-                df = pd.DataFrame(data)
-                df = df.rename(columns={
-                    "branch": "班部名稱", 
-                    "teacher_hours": "老師總時數", 
-                    "ta_hours": "助教總時數"
-                })
+        # 如果有查到資料，就開始渲染畫面
+        if "settle_data" in st.session_state and "claim_amount" in st.session_state:
+            hours_data = st.session_state.settle_data
+            claim_amount = st.session_state.claim_amount
+            
+            # 計算總時數
+            total_teacher_hours = sum([float(item["teacher_hours"]) for item in hours_data]) if hours_data else 0.0
+            total_ta_hours = sum([float(item["ta_hours"]) for item in hours_data]) if hours_data else 0.0
+            
+            # 顯示時數表格 (如果這個月有教學的話)
+            if hours_data:
+                df = pd.DataFrame(hours_data)
+                df = df.rename(columns={"branch": "班部名稱", "teacher_hours": "老師總時數", "ta_hours": "助教總時數"})
                 st.dataframe(df, use_container_width=True, hide_index=True)
+            else:
+                st.info("💡 提示：這個月沒有您的教學回報紀錄。")
                 
-                total_teacher_hours = sum([float(item["teacher_hours"]) for item in data])
-                total_ta_hours = sum([float(item["ta_hours"]) for item in data])
-                
-                total_str = f"老師總計：{total_teacher_hours} 小時 ｜ 助教總計：{total_ta_hours} 小時"
+            # 只要有教學紀錄，或是「有報帳金額」，都可以進行結算
+            if hours_data or claim_amount > 0:
+                # 把系統自動算好的報帳金額顯示出來
+                total_str = f"老師總計：{total_teacher_hours} 小時 ｜ 助教總計：{total_ta_hours} 小時 ｜ 報帳金額：{claim_amount} 元"
                 st.markdown(f"#### {total_str}")
-                
-                # 🌟 新增：讓老師輸入本月要一起結算的報帳總金額
-                claim_amount = st.number_input("本月總報帳金額 (元)", min_value=0, value=0, step=1, help="請填寫您本月申請請款的總額，沒有則保留 0")
                 
                 if st.button("提交結算申請", type="primary", use_container_width=True):
                     taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
@@ -236,14 +241,12 @@ else:
                     try:
                         requests.post(WEB_APP_URL, json={
                             "sheet_name": "結算", 
-                            # 🌟 注意這裡：我們在 row 陣列的最後面加入了 claim_amount
+                            # 將所有結算數字傳到表格 (包含總時數與報帳總額)
                             "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_teacher_hours, total_ta_hours, claim_amount]
                         })
-                        st.success("結算申請已提交！")
+                        st.success("🎉 結算申請已成功提交！")
                     except Exception as e:
                         st.error("連線失敗")
-            else:
-                st.info("這個月沒有您的回報紀錄喔！")
     # === 第四頁：個人 ===
     with tab4:
         st.subheader("基本資訊")
