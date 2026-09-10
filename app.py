@@ -185,7 +185,7 @@ else:
                     except Exception as e:
                         st.error(f"處理失敗: {e}")
 
-    # === 第三頁：結算 ===
+  # === 第三頁：結算 ===
     with tab3:
         st.subheader("薪資結算申請")
         
@@ -222,6 +222,9 @@ else:
                 total_str = f"老師總計：{total_teacher_hours} 小時 ｜ 助教總計：{total_ta_hours} 小時"
                 st.markdown(f"#### {total_str}")
                 
+                # 🌟 新增：讓老師輸入本月要一起結算的報帳總金額
+                claim_amount = st.number_input("本月總報帳金額 (元)", min_value=0, value=0, step=1, help="請填寫您本月申請請款的總額，沒有則保留 0")
+                
                 if st.button("提交結算申請", type="primary", use_container_width=True):
                     taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
                     timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -233,14 +236,14 @@ else:
                     try:
                         requests.post(WEB_APP_URL, json={
                             "sheet_name": "結算", 
-                            "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_teacher_hours, total_ta_hours]
+                            # 🌟 注意這裡：我們在 row 陣列的最後面加入了 claim_amount
+                            "row": [timestamp, teacher_name, selected_month, bank_code, bank_acc, total_teacher_hours, total_ta_hours, claim_amount]
                         })
                         st.success("結算申請已提交！")
                     except Exception as e:
                         st.error("連線失敗")
             else:
                 st.info("這個月沒有您的回報紀錄喔！")
-
     # === 第四頁：個人 ===
     with tab4:
         st.subheader("基本資訊")
