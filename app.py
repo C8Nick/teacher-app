@@ -92,18 +92,22 @@ else:
 
     tab1, tab2, tab3, tab4 = st.tabs(["✍️ 回報", "🧾 請款", "💰 結算", "👤 個人"])
 
-    # === 第一頁：回報 ===
+ # === 第一頁：回報 ===
     with tab1:
         st.link_button("📅 課程行事曆訂閱", "", use_container_width=True)
         st.subheader("填寫課後回報")
+        
+        # 🌟 新增：產生下拉選單的時間選項 (從 08:00 到 22:30，每半小時一個區間)
+        time_options = [f"{h:02d}:{m:02d}" for h in range(8, 23) for m in (0, 30)]
         
         with st.form("report_form"):
             job = st.selectbox("職位", ["老師", "助教"])
             date = st.date_input("課程日期", datetime.date.today())
             
+            # 🌟 修改：把 time_input 改成 selectbox，並設定預設選項的 index
             col1, col2 = st.columns(2)
-            with col1: start_t = st.time_input("上課時間", datetime.time(14, 0))
-            with col2: end_t = st.time_input("下課時間", datetime.time(16, 0))
+            with col1: start_t = st.selectbox("上課時間", time_options, index=time_options.index("14:00"))
+            with col2: end_t = st.selectbox("下課時間", time_options, index=time_options.index("16:00"))
             
             branch = st.text_input("班部名稱")
             hours = st.number_input("上課時數 (小時)", min_value=0.0, value=2.0, step=0.5)
@@ -116,13 +120,13 @@ else:
                     taiwan_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
                     timestamp = taiwan_time.strftime("%Y-%m-%d %H:%M:%S")
                     
-                    row_data = [timestamp, date.strftime("%Y/%m/%d"), teacher_name, start_t.strftime("%H:%M"), end_t.strftime("%H:%M"), branch, hours, content, job]
+                    # 🌟 修改：因為下拉選單直接就是字串了，所以把原本的 .strftime("%H:%M") 拿掉，直接傳入 start_t 跟 end_t
+                    row_data = [timestamp, date.strftime("%Y/%m/%d"), teacher_name, start_t, end_t, branch, hours, content, job]
                     try:
                         requests.post(WEB_APP_URL, json={"sheet_name": "回報", "row": row_data})
                         st.success("課程回報已送出！")
                     except Exception as e:
                         st.error("連線失敗")
-
     # === 第二頁：請款 ===
     with tab2:
         st.subheader("🧾 申請請款")
