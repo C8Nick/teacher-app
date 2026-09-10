@@ -98,7 +98,7 @@ else:
         st.subheader("填寫課後回報")
         
         # 🌟 新增：產生下拉選單的時間選項 (從 08:00 到 22:30，每半小時一個區間)
-        time_options = [f"{h:02d}:{m:02d}" for h in range(8, 23) for m in (0, 30)]
+        time_options = [f"{h:02d}:{m:02d}" for h in range(8, 19) for m in (0,10,20,30,40,50)]
         
         with st.form("report_form"):
             job = st.selectbox("職位", ["老師", "助教"])
