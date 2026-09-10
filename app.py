@@ -31,7 +31,7 @@ if not st.session_state.logged_in:
     with col2:
         st.image("LOGO.png", use_container_width=True)
         
-    st.markdown("<h2 style='text-align: center;'>奇幻島教師服務系統</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center;'>奇幻島教師請薪資報帳系統</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center;'>歡迎回來，請登入您的帳號</p>", unsafe_allow_html=True)
     
     with st.container():
@@ -66,7 +66,7 @@ else:
         st.image("LOGO.png", use_container_width=True)
         
     with col2:
-        st.title("奇幻島教師服務系統")
+        st.title("奇幻島教師請薪資報帳系統")
 
     if st.sidebar.button("登出", type="secondary"):
         st.session_state.logged_in = False
