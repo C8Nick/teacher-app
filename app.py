@@ -14,7 +14,7 @@ WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyR1yso10uCean3ZpwjFkzWaL
 img_icon = Image.open("LOGO.png")
 
 # 將 page_icon 換成你的 LOGO 圖片變數
-st.set_page_config(page_title="奇幻島教師服務系統", page_icon=img_icon, layout="centered")
+st.set_page_config(page_title="奇幻島教師請薪資報帳系統", page_icon=img_icon, layout="centered")
 
 # 初始化 Session State (用來記住登入狀態與資料)
 if "logged_in" not in st.session_state:
